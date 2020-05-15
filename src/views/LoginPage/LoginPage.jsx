@@ -29,9 +29,20 @@ import Warning from "@material-ui/icons/Warning";
 import SnackbarContent from "components/Snackbar/SnackbarContent.js";
 import Clearfix from "components/Clearfix/Clearfix.js";
 
+//dotenv
+import dotenv from 'dotenv';
 
 //http connection을 위함
 import HttpRequest from "../../utils/UseFetch.js"
+
+//디바이스 정보
+import getDeviceInfo from "../../utils/GetDeviceInfo.js";
+
+//구글 로그인
+import GoogleLogin from 'react-google-login';
+
+//로그인 최종 처리 메서드
+import doSignIn from "../../utils/DoSignIn.js";
 
 //Typography
 import Info from "components/Typography/Info.js";
@@ -41,6 +52,7 @@ import styles from "assets/jss/material-kit-react/views/loginPage.js";
 import image from "assets/img/bg7.jpg";
 import naverIcon from "assets/img/icons/naver.png";
 
+dotenv.config();
 const useStyles = makeStyles(styles);
 
 export default function LoginPage(props) {
@@ -51,6 +63,9 @@ export default function LoginPage(props) {
   const classes = useStyles();
   const { ...rest } = props;
 
+
+
+  
   //아이디/비밀번호 입력 여부 저장
   const [loginId, setLoginId] = useState('');
   const [loginPw, setLoginPw] = useState('');
@@ -95,7 +110,10 @@ export default function LoginPage(props) {
     } else {
       setIdEmpty(false);
       setPwEmpty(false);
-      HttpRequest('http://13.124.29.106:8080/login', 'POST', JSON.stringify({ id: loginId, password: loginPw }),
+      //디바이스 정보 생성
+      const deviceInfo = getDeviceInfo();
+
+      HttpRequest(`${process.env.REACT_APP_RESTAPI_SERVER}/login`, 'POST', JSON.stringify({ id: loginId, password: loginPw, deviceInfo: deviceInfo }),
         (res) => {
           console.log(`Response from server...: ${res}`);
           if (res.response === "OK") {
@@ -111,9 +129,47 @@ export default function LoginPage(props) {
 
 
   //구글 로그인
-  const responseGoogleLogin = (res) => {
+  const responseGoogleLoginSuccess = (res) => {
+    const userId = res.googleId;
+    const userNickname = res.Qt.Ad;
+    const userEmail = res.Qt.zu;
+    const provider = 'google';
 
+    console.log(`사용자 이름: ${res.Qt.Ad}`);
+    console.log(`이메일: ${res.Qt.zu}`);
+    console.log(`아이디: ${res.googleId}`);
+    //계정이 등록되어 있는 계정인지 확인하고, 등록되어 있지 않다면 추가하고 리턴
+    HttpRequest(`${process.env.REACT_APP_RESTAPI_SERVER}/login/google`, 'POST', JSON.stringify({ id: userId, nickname: userNickname, email: userEmail, deviceInfo: getDeviceInfo(), provider: provider }),
+        (res) => {
+          console.log(`Response from server...: ${res}`);
+          if (res.response === "OK") {
+            //doSignIn 호출
+            const token = {
+              id: userId,
+              nickname: userNickname,
+              email: userEmail,
+              provider: provider,
+              mToken: res.data.token
+            };
+            setCanRedirect(doSignIn(token));
+          } else if (res.response.includes("FAILED")) {
+            console.log(res.response); 
+          }
+        }
+    );
   }
+
+  const responseGoogleLoginFailure = (res) => {
+    console.log("구글 로그인 실패");
+    console.log(res);
+  }
+
+  //네이버 로그인 주소
+  const naverClientId = process.env.REACT_APP_NAVER_CLIENT_ID;
+  const naverRedirectUrl = process.env.REACT_APP_NAVER_REDIRECT_URL;
+  const naverLoginState = process.env.REACT_APP_NAVER_LOGIN_STATE;
+  const naverLoginUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${naverClientId}&redirect_uri=${naverRedirectUrl}&state=${naverLoginState}`;
+  
 
   //네이버 로그인
   const responseNaverLogin = (res) => {
@@ -127,22 +183,13 @@ export default function LoginPage(props) {
       id: res.id,
       nickname: res.nickname,
       email: res.email,
-      provider: 'direct'
+      provider: 'direct',
+      mToken:  res.token
     };
-    doSignIn(token);
+    setCanRedirect(doSignIn(token));
   }
 
-  //localStorage에 토큰 저장
-  const doSignIn = (token) => {
-    const { id, nickname, email, provider } = token;
-    window.localStorage.setItem('hnh-id', id);
-    window.localStorage.setItem('hnh-nickname', nickname);
-    window.localStorage.setItem('hnh-email', email);
-    window.localStorage.setItem('hnh-provider', provider);
-    console.log("정보가 저장되었습니다");
-    console.log(`저장 정보: ${window.localStorage.getItem('hnh-id')}`);
-    setCanRedirect(true);
-  }
+
 
   return (
     <div>
@@ -172,31 +219,40 @@ export default function LoginPage(props) {
                       <CardHeader color="primary" className={classes.cardHeader}>
                         <h4>Home in Hand에 로그인</h4>
                         <div className={classes.socialLine}>
-                          <Button
-                            justIcon
-                            href="#pablo"
-                            target="_blank"
-                            color="transparent"
-                            onClick={e => e.preventDefault()}
-                          >
-                            <i className={"fab fa-google"} />
-                          </Button>
+                        {/* {<Button
+                                justIcon
+                                target="_blank"
+                                color="transparent"
+                                onClick={renderProps.onClick}
+                                disabled={renderProps.disabled}
+                              >
+                                <i className={"fab fa-google"} />
+                              </Button>} */}
 
-                          <Button
+
+                          <GoogleLogin
+                            clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}
+                            render={renderProps => (
+                              <img height='40' src='icons/google.png' onClick={renderProps.onClick} style={{margin:'20px'}}/>
+                            )}
+                            buttonText="Login"
+                            onSuccess={responseGoogleLoginSuccess}
+                            onFailure={responseGoogleLoginFailure}
+                            cookiePolicy={'single_host_origin'}
+                          />
+
+                         
+                          <a href={naverLoginUrl}><img height='40' src='icons/naver.png' style={{margin:'20px'}}/></a>
+
+                          {/* <Button
                             justIcon
                             href="#pablo"
                             target="_blank"
                             color="transparent"
                             onClick={e => e.preventDefault()}
                           >
-                            <div
-                              className={classes.pageHeader}
-                              style={{
-                                backgroundImage: "url(" + naverIcon + ")",
-                                backgroundSize: "cover",
-                              }}
-                            />
-                          </Button>
+                            <div><img height='50' src='http://static.nid.naver.com/oauth/small_g_in.PNG'/></div>
+                          </Button> */}
 
                         </div>
                       </CardHeader>
@@ -282,6 +338,9 @@ export default function LoginPage(props) {
                     </form>
                   </Card>
                 </GridItem>
+              
+             
+     
               </GridContainer>
             </div>
             <Footer whiteFont />

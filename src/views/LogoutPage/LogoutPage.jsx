@@ -2,8 +2,6 @@ import { Redirect } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 
 
-
-
 export default function LogoutPage(props) {
     const { ...rest } = props;
 
@@ -14,9 +12,9 @@ export default function LogoutPage(props) {
         window.localStorage.removeItem('hnh-nickname');
         window.localStorage.removeItem('hnh-email');
         window.localStorage.removeItem('hnh-provider');
+        window.localStorage.removeItem('hnh-token');
         setRemoved(true);
     }
-
 
     useEffect(() => {
         removeToken();

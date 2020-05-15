@@ -15,14 +15,12 @@ import Icon from "@material-ui/core/Icon";
 // core components
 import Header from "components/Header/Header.js";
 import HeaderLinks from "components/Header/HeaderLinks.js";
-import DeviceLinks from "components/Header/DeviceLinks.js";
 import Footer from "components/Footer/Footer.js";
 import GridContainer from "components/Grid/GridContainer.js";
 import GridItem from "components/Grid/GridItem.js";
 import Button from "components/CustomButtons/Button.js";
 import Parallax from "components/Parallax/Parallax.js";
 import ShrinkedParallax from "components/ShrinkedParallax/ShrinkedParallax.js"
-
 
 
 import styles from "assets/jss/material-kit-react/views/components.js";
@@ -57,6 +55,8 @@ export default function MainPage(props) {
     const { ...rest } = props;
     const [ isModalUp, setModalUp ] = useState(true);
 
+    console.log(`경로: ${props.location.pathname}`);
+
     return (
         <div>
             {(window.localStorage.getItem('hnh-id') === null) ?
@@ -80,36 +80,30 @@ export default function MainPage(props) {
                     <Header
                         brand="Home in Hand"
                         rightLinks={<HeaderLinks />}
-                        deviceLinks={<DeviceLinks />}
                         fixed
-                        color="white"
+                        color="transparent"
                         changeColorOnScroll={{
-                            height: 0,
+                            height: 300,
                             color: "white"
                         }}
                         {...rest}
                         
                     />
 
-                    {/* <ShrinkedParallax image={require("assets/img/bg4.jpg")}>
+                    <ShrinkedParallax image={require("assets/img/bg4.jpg")}>
                         
-                    </ShrinkedParallax> */}
+                    </ShrinkedParallax>
 
-                    <p>abcde</p>
-
-                 
+                    <div className={classNames(classes.main, classes.mainRaised)}>
                     <CustomTabs
                             headerColor="primary"
                             tabs={[
                             {
-                                tabName: "나의 기기",
+                                tabName: "질문 목록",
                                 tabIcon: RouterIcon,
                                 tabContent: (
                                 <p className={classes.textCenter}>
-
-
-                                    
-                                    나의 기기
+                                    질문 목록
 
                                     <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
                                     <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
@@ -120,11 +114,11 @@ export default function MainPage(props) {
                                 )
                             },
                             {
-                                tabName: "기기 등록",
+                                tabName: "질문하기",
                                 tabIcon: AddIcon,
                                 tabContent: (
                                 <p className={classes.textCenter}>
-                                    기기 등록
+                                    질문하기
 
                                     <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
                                     <br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/><br/>
@@ -134,8 +128,8 @@ export default function MainPage(props) {
                                 )
                             }
                             ]}
-                    />
-                   
+                        />
+                    </div>
 
                     { // 모달 표시
                         ((typeof(props.location.state) !== 'undefined' &&  props.location.state.from === 'join-complete') &&

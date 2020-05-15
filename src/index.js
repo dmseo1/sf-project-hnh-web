@@ -11,9 +11,11 @@ import Components from "views/Components/Components.js";
 import LandingPage from "views/LandingPage/LandingPage.js";
 import ProfilePage from "views/ProfilePage/ProfilePage.js";
 import LoginPage from "views/LoginPage/LoginPage.jsx";
+import NaverLoginOKPage from "views/NaverLoginOKPage/NaverLoginOKPage.jsx";
 import JoinPage from "views/JoinPage/JoinPage.jsx"
 import LogoutPage from "views/LogoutPage/LogoutPage.jsx";
 import MainPage from "views/MainPage/MainPage.jsx";
+import InquiryMainPage from "views/InquiryMainPage/InquiryMainPage.jsx";
 
 
 var hist = createBrowserHistory();
@@ -25,8 +27,10 @@ ReactDOM.render(
         <Route path="/landing-page" component={LandingPage} />
         <Route path="/profile-page" component={ProfilePage} />
         <Route path="/join" component={JoinPage} />
-        <Route path="/login" component={LoginPage} />
+        <Route exact path="/login" component={LoginPage} />
+        <Route path="/login/naver/ok" component={NaverLoginOKPage} />
         <Route path="/logout" component={LogoutPage} />
+        <Route path="/inquiry" component={InquiryMainPage} />
         <Route path="/components" component={Components} />
         <Route path="/" component={MainPage} />
       </Switch>

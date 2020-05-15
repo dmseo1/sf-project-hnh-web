@@ -28,8 +28,14 @@ import SnackbarContent from "components/Snackbar/SnackbarContent.js";
 import Clearfix from "components/Clearfix/Clearfix.js";
 
 
+//디바이스 정보
+import getDeviceInfo from "../../utils/GetDeviceInfo.js";
+
 //http connection을 위함
 import HttpRequest from "../../utils/UseFetch.js"
+
+//dotenv
+import dotenv from 'dotenv';
 
 //Typography
 import Info from "components/Typography/Info.js";
@@ -42,6 +48,7 @@ import styles from "assets/jss/material-kit-react/views/loginPage.js";
 import image from "assets/img/bg7.jpg";
 
 const useStyles = makeStyles(styles);
+dotenv.config();
 
 
 export default function JoinPage(props) {
@@ -99,7 +106,7 @@ export default function JoinPage(props) {
 
         //아이디 중복 검사
         
-        HttpRequest('http://13.124.29.106:8080/join/id_dup_chk', 'POST', JSON.stringify({ id: e.target.value }),
+        HttpRequest(`${process.env.REACT_APP_RESTAPI_SERVER}/join/id_dup_chk`, 'POST', JSON.stringify({ id: e.target.value }),
         (res) => {
           console.log(`Response from server...: ${res}`);
           if (res.response === "OK") {
@@ -165,7 +172,7 @@ export default function JoinPage(props) {
         }
         
         //이메일 중복 체크
-        HttpRequest('http://13.124.29.106:8080/join/email_dup_chk', 'POST', JSON.stringify({ email: e.target.value }),
+        HttpRequest(`${process.env.REACT_APP_RESTAPI_SERVER}/join/email_dup_chk`, 'POST', JSON.stringify({ email: e.target.value }),
         (res) => {
           console.log(`Response from server...: ${res}`);
           if (res.response === "OK") {
@@ -195,7 +202,8 @@ export default function JoinPage(props) {
     const userJoin = () => {
         if(isIdChked && isPwChked && isRePwChked && isEmailChked && isNicknameChked) {
             setJoin(true);
-            HttpRequest('http://13.124.29.106:8080/join/confirm', 'POST', JSON.stringify({ id: userId, password: userPw, email: userEmail, nickname: userNickname }),
+            HttpRequest(`${process.env.REACT_APP_RESTAPI_SERVER}/join/confirm`, 'POST', 
+                JSON.stringify({ id: userId, password: userPw, email: userEmail, nickname: userNickname, deviceInfo: getDeviceInfo() }),
                 (res) => {
                 console.log(`Response from server...: ${res}`);
                 if (res.response === "OK") {
@@ -203,6 +211,7 @@ export default function JoinPage(props) {
                     window.localStorage.setItem('hnh-id', userId);
                     window.localStorage.setItem('hnh-nickname', userNickname);
                     window.localStorage.setItem('hnh-email', userEmail);
+                    window.localStorage.setItem('hnh-token', res.data.token);
                     window.localStorage.setItem('hnh-provider', 'direct');
                     //리다이렉트 실행
                     setJoinComplete(true);

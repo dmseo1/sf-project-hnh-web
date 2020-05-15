@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Redirect } from 'react-router-dom';
 // nodejs library that concatenates classes
 import classNames from "classnames";
 // nodejs library to set properties for components
@@ -16,11 +17,21 @@ import Menu from "@material-ui/icons/Menu";
 // core components
 import styles from "assets/jss/material-kit-react/components/headerStyle.js";
 
+//http connection
+import HttpRequest from '../../utils/UseFetch.js';
+
+//login valid chk meterial
+import getDeviceInfo from '../../utils/GetDeviceInfo.js'
+
+require('dotenv').config();
+
 const useStyles = makeStyles(styles);
 
 export default function Header(props) {
   const classes = useStyles();
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+  const [isDrawerOpened, setDrawerOpened] = useState(false);
+  const [isLoginValid, setLoginValid] = useState(true);
+
   React.useEffect(() => {
     if (props.changeColorOnScroll) {
       window.addEventListener("scroll", headerColorChange);
@@ -31,9 +42,33 @@ export default function Header(props) {
       }
     };
   });
+
+  //로그인 유효성 체크
+  const checkLoginValidation = () => {
+    window.localStorage.getItem('hnh-id')
+    HttpRequest(`${process.env.REACT_APP_RESTAPI_SERVER}/login_valid_check`, 'POST', JSON.stringify({
+      id: window.localStorage.getItem('hnh-id'),
+      deviceInfo: getDeviceInfo(),
+      provider: window.localStorage.getItem('hnh-provider'),
+      token: window.localStorage.getItem('hnh-token')
+    }),
+      (res) => {
+        if (res.response === "NO-TOKEN" || res.response === "INVALID-TOKEN") {
+          setLoginValid(false);
+        } else if (res.response === "OK") {
+          setLoginValid(true);
+        } else {
+          //
+        }
+      }
+    );
+  }
+
   const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+    setDrawerOpened(!isDrawerOpened);
   };
+
+
   const headerColorChange = () => {
     const { color, changeColorOnScroll } = props;
     const windowsScrollTop = window.pageYOffset;
@@ -53,7 +88,7 @@ export default function Header(props) {
         .classList.remove(classes[changeColorOnScroll.color]);
     }
   };
-  const { color, rightLinks, leftLinks, brand, fixed, absolute } = props;
+  const { color, deviceLinks, rightLinks, leftLinks, brand, fixed, absolute } = props;
   const appBarClasses = classNames({
     [classes.appBar]: true,
     [classes[color]]: color,
@@ -61,23 +96,18 @@ export default function Header(props) {
     [classes.fixed]: fixed
   });
   const brandComponent = <Button className={classes.title}>{brand}</Button>;
+
+  useEffect(() => {
+    checkLoginValidation();
+  });
+
   return (
-    <AppBar className={appBarClasses}>
-      <Toolbar className={classes.container}>
-        {leftLinks !== undefined ? brandComponent : null}
-        <div className={classes.flex}>
-          {leftLinks !== undefined ? (
-            <Hidden smDown implementation="css">
-              {leftLinks}
-            </Hidden>
-          ) : (
-            brandComponent
-          )}
-        </div>
-        <Hidden smDown implementation="css">
-          {rightLinks}
-        </Hidden>
-        <Hidden mdUp>
+    <div>
+      {(!isLoginValid && <Redirect to="/logout" />)}
+      <AppBar className={appBarClasses}>
+        {/*  */}
+
+        <div className={classes.menuButton}>
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -85,25 +115,56 @@ export default function Header(props) {
           >
             <Menu />
           </IconButton>
-        </Hidden>
-      </Toolbar>
-      <Hidden mdUp implementation="js">
+
+        </div>
+
+
         <Drawer
           variant="temporary"
-          anchor={"right"}
-          open={mobileOpen}
+          anchor={"left"}
+          open={isDrawerOpened}
           classes={{
             paper: classes.drawerPaper
           }}
           onClose={handleDrawerToggle}
         >
-          <div className={classes.appResponsive}>
+
+          <div>
+            Home in Hand
+
             {leftLinks}
-            {rightLinks}
+            {deviceLinks}
+            <Hidden mdUp implementation="css">
+              {rightLinks}
+            </Hidden>
+
           </div>
         </Drawer>
-      </Hidden>
-    </AppBar>
+
+
+        <Toolbar className={classes.container}>
+          {leftLinks !== undefined ? brandComponent : null}
+          <div className={classes.flex}>
+            {leftLinks !== undefined ? (
+              <Hidden mdDown implementation="css">
+                {leftLinks}
+              </Hidden>
+            ) : (
+                brandComponent
+              )}
+          </div>
+
+          <Hidden smDown implementation="css">
+            {rightLinks}
+          </Hidden>
+
+
+        </Toolbar>
+
+
+      </AppBar>
+    </div>
+
   );
 }
 
@@ -125,6 +186,7 @@ Header.propTypes = {
   ]),
   rightLinks: PropTypes.node,
   leftLinks: PropTypes.node,
+  deviceLinks: PropTypes.node,
   brand: PropTypes.string,
   fixed: PropTypes.bool,
   absolute: PropTypes.bool,

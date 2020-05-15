@@ -3,6 +3,10 @@ import { defaultFont } from "assets/jss/material-kit-react.js";
 import tooltip from "assets/jss/material-kit-react/tooltipsStyle.js";
 
 const headerLinksStyle = theme => ({
+  drawerMenuPadding: {
+    paddingLeft: theme.spacing(3),
+    paddingRight: theme.spacing(3)
+  },
   list: {
     ...defaultFont,
     fontSize: "14px",
